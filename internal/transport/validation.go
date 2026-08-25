@@ -62,7 +62,7 @@ func Deadline(r *http.Request) time.Duration {
 	if v := r.Header.Get("X-Timeout-Ms"); v != "" {
 		var n int64
 		fmt.Sscan(v, &n)
-		if n >= 0 && n < 60000 {
+		if n > 0 && n < 60000 {
 			return time.Duration(n) * time.Millisecond
 		}
 	}

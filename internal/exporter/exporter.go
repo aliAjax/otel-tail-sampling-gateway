@@ -48,8 +48,21 @@ func (m *Manager) Send(ctx context.Context, b []telemetry_domain.Span) error {
 		if e == nil {
 			return nil
 		}
-		time.Sleep(time.Duration(i+1) * 5 * time.Millisecond)
+		if err := sleep(ctx, time.Duration(i+1)*5*time.Millisecond); err != nil {
+			return err
+		}
 	}
 	m.DLQ = append(m.DLQ, b)
 	return errors.New("export_failed")
+}
+
+func sleep(ctx context.Context, d time.Duration) error {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
 }

@@ -58,7 +58,7 @@ func (a *app) write(w http.ResponseWriter, status int, v any) {
 }
 func (a *app) handler(w http.ResponseWriter, r *http.Request) {
 	id := reqID(r)
-	ctx, cancel := context.WithTimeout(context.Background(), transport.Deadline(r))
+	ctx, cancel := context.WithTimeout(r.Context(), transport.Deadline(r))
 	defer cancel()
 	r = r.WithContext(ctx)
 	w.Header().Set("X-Request-ID", id)
