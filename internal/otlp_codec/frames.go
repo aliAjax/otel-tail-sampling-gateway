@@ -27,7 +27,7 @@ func EncodeFrame(payload []byte) []byte {
 func DecodeFrame(r io.Reader, max uint32) (Frame, error) {
 	var h [10]byte
 	if _, e := io.ReadFull(r, h[:]); e != nil {
-		return Frame{}, fmt.Errorf("frame_header: %v", e)
+		return Frame{}, fmt.Errorf("frame_header: %w", e)
 	}
 	if string(h[:4]) != "OTLP" {
 		return Frame{}, fmt.Errorf("frame_magic")
@@ -38,14 +38,17 @@ func DecodeFrame(r io.Reader, max uint32) (Frame, error) {
 	}
 	p := make([]byte, n)
 	if _, e := io.ReadFull(r, p); e != nil {
-		return Frame{}, fmt.Errorf("frame_partial: %v", e)
+		return Frame{}, fmt.Errorf("frame_partial: %w", e)
 	}
 	var c uint32
 	if e := binary.Read(r, binary.BigEndian, &c); e != nil {
-		return Frame{}, fmt.Errorf("frame_checksum: %v", e)
+		return Frame{}, fmt.Errorf("frame_checksum: %w", e)
 	}
 	if crc32.ChecksumIEEE(p) != c {
 		return Frame{}, fmt.Errorf("frame_checksum_mismatch")
+	}
+	if e := ValidateVersion(h[4]); e != nil {
+		return Frame{}, fmt.Errorf("frame_version: %w", e)
 	}
 	return Frame{Version: h[4], Flags: h[5], Payload: p, Checksum: c}, nil
 }
