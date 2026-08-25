@@ -15,8 +15,12 @@ type Metrics struct {
 }
 
 func Log(event string, fields map[string]any) {
-	fields["event"] = event
-	json.NewEncoder(os.Stdout).Encode(fields)
+	out := make(map[string]any, len(fields)+1)
+	for k, v := range fields {
+		out[k] = v
+	}
+	out["event"] = event
+	json.NewEncoder(os.Stdout).Encode(out)
 }
 
 var Logger = log.New(os.Stdout, "", 0)
