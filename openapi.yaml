@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info:
+  title: OTEL Tail Sampling Gateway
+  version: 1.0.0
+paths:
+  /healthz: {get: {responses: {'200': {description: ok}}}}
+  /v1/otlp/traces: {post: {responses: {'202': {description: accepted}}}}
+  /api/v1/tenants: {get: {responses: {'200': {description: tenants}}}, post: {responses: {'201': {description: created}}}}
