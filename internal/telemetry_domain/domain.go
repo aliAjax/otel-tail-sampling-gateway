@@ -33,6 +33,28 @@ func (s Span) Duration() time.Duration {
 	return 0
 }
 
+// cloneAttributes returns a new map with copies of all entries, or nil if the
+// input is nil so callers cannot share storage with the original.
+func cloneAttributes(a Attributes) Attributes {
+	if a == nil {
+		return nil
+	}
+	out := make(Attributes, len(a))
+	for k, v := range a {
+		out[k] = v
+	}
+	return out
+}
+
+// Clone returns a deep copy of the span, including its attribute and resource
+// maps, so the result shares no mutable state with s.
+func (s Span) Clone() Span {
+	out := s
+	out.Attributes = cloneAttributes(s.Attributes)
+	out.Resource.Attributes = cloneAttributes(s.Resource.Attributes)
+	return out
+}
+
 type Trace struct {
 	ID        string    `json:"trace_id"`
 	TenantID  string    `json:"tenant_id"`
@@ -41,6 +63,22 @@ type Trace struct {
 	LastSeen  time.Time `json:"last_seen"`
 	State     string    `json:"state"`
 }
+
+// Clone returns a deep copy of the trace, including a new backing slice and
+// cloned attribute/resource maps for every span, so the result shares no
+// mutable state with t.
+func (t Trace) Clone() Trace {
+	out := t
+	if t.Spans != nil {
+		spans := make([]Span, len(t.Spans))
+		for i := range t.Spans {
+			spans[i] = t.Spans[i].Clone()
+		}
+		out.Spans = spans
+	}
+	return out
+}
+
 type SamplingDecision struct {
 	TraceID   string    `json:"trace_id"`
 	TenantID  string    `json:"tenant_id"`

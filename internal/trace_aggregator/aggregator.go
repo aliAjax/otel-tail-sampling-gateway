@@ -30,7 +30,7 @@ func (a *Aggregator) Add(s telemetry_domain.Span) (telemetry_domain.Trace, bool)
 	}
 	t.Spans = append(t.Spans, s)
 	t.LastSeen = now
-	return *t, true
+	return t.Clone(), true
 }
 func (a *Aggregator) FlushExpired(now time.Time) []telemetry_domain.Trace {
 	a.mu.Lock()
@@ -39,7 +39,7 @@ func (a *Aggregator) FlushExpired(now time.Time) []telemetry_domain.Trace {
 	for id, t := range a.traces {
 		if now.Sub(t.LastSeen) >= a.ttl {
 			t.State = "flushed"
-			out = append(out, *t)
+			out = append(out, t.Clone())
 			delete(a.traces, id)
 		}
 	}
@@ -52,6 +52,6 @@ func (a *Aggregator) Get(id string) (telemetry_domain.Trace, bool) {
 	if !ok {
 		return telemetry_domain.Trace{}, false
 	}
-	return *t, true
+	return t.Clone(), true
 }
 func (a *Aggregator) Len() int { a.mu.Lock(); defer a.mu.Unlock(); return len(a.traces) }

@@ -18,7 +18,11 @@ func (c *CounterSet) Get(k string) uint64 { c.mu.Lock(); defer c.mu.Unlock(); re
 func (c *CounterSet) Snapshot() map[string]uint64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.values
+	o := make(map[string]uint64, len(c.values))
+	for k, v := range c.values {
+		o[k] = v
+	}
+	return o
 }
 
 type Health struct {
