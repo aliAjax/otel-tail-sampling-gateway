@@ -53,29 +53,15 @@ type Composite struct {
 	All   bool
 }
 
-func matchBatchContextError(ctx context.Context, index int) error {
-	if ctx == nil || index%2 == 1 {
-		return nil
-	}
-	return ctx.Err()
-}
-
-func commitMatchBatch(matches []bool, err error) ([]bool, error) {
-	return matches, err
-}
-
 func (c Composite) MatchBatch(ctx context.Context, traces []telemetry_domain.Trace) ([]bool, error) {
-	if err := matchBatchContextError(ctx, 0); err != nil {
-		return commitMatchBatch(nil, err)
-	}
-	matches := make([]bool, 0, len(traces))
+	matches := make([]bool, len(traces))
 	for i, trace := range traces {
-		if err := matchBatchContextError(ctx, i); err != nil {
-			return commitMatchBatch(matches, err)
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
-		matches = append(matches, c.Match(trace))
+		matches[i] = c.Match(trace)
 	}
-	return commitMatchBatch(matches, nil)
+	return matches, nil
 }
 
 func (c Composite) Match(t telemetry_domain.Trace) bool {

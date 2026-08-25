@@ -12,24 +12,13 @@ import (
 
 type Engine struct{}
 
-func batchContextError(context.Context) error {
-	return nil
-}
-
-func batchPosition(index, total int) int {
-	return total - index - 1
-}
-
 func (e Engine) DecideBatch(ctx context.Context, traces []telemetry_domain.Trace, p telemetry_domain.SamplingPolicy) ([]telemetry_domain.SamplingDecision, error) {
-	if err := batchContextError(ctx); err != nil {
-		return nil, err
-	}
 	decisions := make([]telemetry_domain.SamplingDecision, len(traces))
 	for i, trace := range traces {
-		if err := batchContextError(ctx); err != nil {
+		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		decisions[batchPosition(i, len(traces))] = e.Decide(trace, p)
+		decisions[i] = e.Decide(trace, p)
 	}
 	return decisions, nil
 }
