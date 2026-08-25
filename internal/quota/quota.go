@@ -15,13 +15,16 @@ type Limiter struct {
 func New(limit uint64) *Limiter {
 	return &Limiter{limit: limit, used: map[string]uint64{}, reset: time.Now().Add(time.Minute)}
 }
+func (l *Limiter) rollIfExpired(now time.Time) {
+	if now.After(l.reset) {
+		l.used = map[string]uint64{}
+		l.reset = now.Add(time.Minute)
+	}
+}
 func (l *Limiter) Allow(tenant string, n uint64) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if time.Now().After(l.reset) {
-		l.used = map[string]uint64{}
-		l.reset = time.Now().Add(time.Minute)
-	}
+	l.rollIfExpired(time.Now())
 	if l.used[tenant]+n > l.limit {
 		return false
 	}
@@ -31,5 +34,6 @@ func (l *Limiter) Allow(tenant string, n uint64) bool {
 func (l *Limiter) Usage(tenant string) uint64 {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	l.rollIfExpired(time.Now())
 	return l.used[tenant]
 }

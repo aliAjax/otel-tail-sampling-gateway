@@ -13,6 +13,18 @@ type Engine struct {
 }
 
 func New() *Engine { return &Engine{points: map[string]telemetry_domain.MetricPoint{}} }
+
+func cloneAttrs(a telemetry_domain.Attributes) telemetry_domain.Attributes {
+	if a == nil {
+		return nil
+	}
+	out := make(telemetry_domain.Attributes, len(a))
+	for k, v := range a {
+		out[k] = v
+	}
+	return out
+}
+
 func (e *Engine) Add(p telemetry_domain.MetricPoint) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -21,6 +33,7 @@ func (e *Engine) Add(p telemetry_domain.MetricPoint) bool {
 		e.duplicates++
 		return false
 	}
+	p.Attributes = cloneAttrs(p.Attributes)
 	e.points[k] = p
 	return true
 }
@@ -31,6 +44,7 @@ func (e *Engine) Snapshot() []telemetry_domain.MetricPoint {
 	defer e.mu.Unlock()
 	out := make([]telemetry_domain.MetricPoint, 0, len(e.points))
 	for _, point := range e.points {
+		point.Attributes = cloneAttrs(point.Attributes)
 		out = append(out, point)
 	}
 	return out
