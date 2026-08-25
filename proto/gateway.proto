@@ -1,0 +1,7 @@
+syntax = "proto3";
+package gateway;
+service Gateway { rpc Ingest(IngestRequest) returns (IngestResponse); rpc Flush(FlushRequest) returns (FlushResponse); }
+message IngestRequest { string tenant_id = 1; bytes payload = 2; string signal = 3; }
+message IngestResponse { string request_id = 1; uint64 accepted = 2; }
+message FlushRequest { string tenant_id = 1; }
+message FlushResponse { uint64 exported = 1; }
